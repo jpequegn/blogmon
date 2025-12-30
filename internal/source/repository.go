@@ -1,6 +1,7 @@
 package source
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -70,4 +71,44 @@ func (r *Repository) List() ([]Source, error) {
 func (r *Repository) UpdateLastFetched(id int64) error {
 	_, err := r.db.Exec(`UPDATE sources SET last_fetched = CURRENT_TIMESTAMP WHERE id = ?`, id)
 	return err
+}
+
+func (r *Repository) GetByURL(url string) (*Source, error) {
+	var s Source
+	var discoveredFrom sql.NullInt64
+	var lastFetched sql.NullTime
+	err := r.db.QueryRow(`
+		SELECT id, url, name, feed_url, discovered_from, last_fetched, active, created_at
+		FROM sources WHERE url = ?
+	`, url).Scan(&s.ID, &s.URL, &s.Name, &s.FeedURL, &discoveredFrom, &lastFetched, &s.Active, &s.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	if discoveredFrom.Valid {
+		s.DiscoveredFrom = &discoveredFrom.Int64
+	}
+	if lastFetched.Valid {
+		s.LastFetched = &lastFetched.Time
+	}
+	return &s, nil
+}
+
+func (r *Repository) AddDiscovered(url, name, feedURL string, discoveredFromPostID int64) (*Source, error) {
+	result, err := r.db.Exec(
+		`INSERT INTO sources (url, name, feed_url, discovered_from, active) VALUES (?, ?, ?, ?, TRUE)`,
+		url, name, feedURL, discoveredFromPostID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert source: %w", err)
+	}
+
+	id, _ := result.LastInsertId()
+	return &Source{
+		ID:             id,
+		URL:            url,
+		Name:           name,
+		FeedURL:        feedURL,
+		DiscoveredFrom: &discoveredFromPostID,
+		Active:         true,
+	}, nil
 }
