@@ -44,6 +44,8 @@ blogmon show 1
 | `blogmon init` | Initialize config and database |
 | `blogmon add <url>` | Add a blog to monitor |
 | `blogmon fetch` | Download new posts from feeds |
+| `blogmon extract` | Extract insights from posts using LLM |
+| `blogmon score` | Calculate community/relevance/novelty scores |
 | `blogmon list` | List posts |
 | `blogmon show <id>` | Show post details |
 | `blogmon sources` | List monitored sources |
@@ -98,10 +100,11 @@ fetch → extract → score → link → query
 - [x] show command
 - [x] sources command
 
-### Phase 2 (Intelligence)
-- [ ] LLM-powered insight extraction
-- [ ] Community scoring (HN, Reddit)
-- [ ] Relevance scoring
+### Phase 2 (Intelligence) - Complete
+- [x] LLM-powered insight extraction (Ollama)
+- [x] Community scoring (HN API)
+- [x] Relevance scoring (keyword matching)
+- [x] Novelty scoring (TF-IDF)
 
 ### Phase 3 (Graph & Discovery)
 - [ ] Concept graph
