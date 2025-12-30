@@ -15,19 +15,21 @@ import (
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List posts",
-	Long:  `List posts from monitored blogs, sorted by date.`,
+	Long:  `List posts from monitored blogs with sorting options.`,
 	RunE:  runList,
 }
 
 var (
-	listTop   int
-	listSince string
+	listTop    int
+	listSince  string
+	listSortBy string
 )
 
 func init() {
 	rootCmd.AddCommand(listCmd)
 	listCmd.Flags().IntVarP(&listTop, "top", "n", 20, "Number of posts to show")
 	listCmd.Flags().StringVar(&listSince, "since", "", "Show posts since date (YYYY-MM-DD)")
+	listCmd.Flags().StringVar(&listSortBy, "sort", "date", "Sort by: date, score, source")
 }
 
 func runList(cmd *cobra.Command, args []string) error {
@@ -37,8 +39,14 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 	defer db.Close()
 
+	// Validate sort option
+	validSorts := map[string]bool{"date": true, "score": true, "source": true}
+	if !validSorts[listSortBy] {
+		return fmt.Errorf("invalid sort option: %s (valid options: date, score, source)", listSortBy)
+	}
+
 	repo := post.NewRepository(db)
-	posts, err := repo.List(listTop, 0)
+	posts, err := repo.ListSorted(listTop, 0, listSortBy)
 	if err != nil {
 		return err
 	}

@@ -93,6 +93,48 @@ func (r *Repository) List(limit, offset int) ([]Post, error) {
 	return posts, rows.Err()
 }
 
+func (r *Repository) ListSorted(limit, offset int, sortBy string) ([]Post, error) {
+	orderClause := "ORDER BY p.published_at DESC"
+	switch sortBy {
+	case "score":
+		orderClause = "ORDER BY COALESCE(sc.final_score, 0) DESC, p.published_at DESC"
+	case "source":
+		orderClause = "ORDER BY s.name ASC, p.published_at DESC"
+	case "date":
+		orderClause = "ORDER BY p.published_at DESC"
+	}
+
+	query := fmt.Sprintf(`
+		SELECT p.id, p.source_id, s.name, p.url, p.title, p.author, p.published_at, p.fetched_at,
+		       COALESCE(sc.final_score, 0) as final_score
+		FROM posts p
+		JOIN sources s ON p.source_id = s.id
+		LEFT JOIN scores sc ON p.id = sc.post_id
+		%s
+		LIMIT ? OFFSET ?
+	`, orderClause)
+
+	rows, err := r.db.Query(query, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []Post
+	for rows.Next() {
+		var p Post
+		var score sql.NullFloat64
+		if err := rows.Scan(&p.ID, &p.SourceID, &p.SourceName, &p.URL, &p.Title, &p.Author, &p.PublishedAt, &p.FetchedAt, &score); err != nil {
+			return nil, err
+		}
+		if score.Valid {
+			p.FinalScore = &score.Float64
+		}
+		posts = append(posts, p)
+	}
+	return posts, rows.Err()
+}
+
 func (r *Repository) Get(id int64) (*Post, error) {
 	var p Post
 	var score sql.NullFloat64
