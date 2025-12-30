@@ -46,6 +46,9 @@ blogmon show 1
 | `blogmon fetch` | Download new posts from feeds |
 | `blogmon extract` | Extract insights from posts using LLM |
 | `blogmon score` | Calculate community/relevance/novelty scores |
+| `blogmon link` | Build concept graph by linking related posts |
+| `blogmon discover` | Discover new blogs from references |
+| `blogmon trends` | Show trending topics |
 | `blogmon list` | List posts |
 | `blogmon show <id>` | Show post details |
 | `blogmon sources` | List monitored sources |
@@ -106,10 +109,10 @@ fetch → extract → score → link → query
 - [x] Relevance scoring (keyword matching)
 - [x] Novelty scoring (TF-IDF)
 
-### Phase 3 (Graph & Discovery)
-- [ ] Concept graph
-- [ ] Blog discovery
-- [ ] Trend detection
+### Phase 3 (Graph & Discovery) - Complete
+- [x] Concept graph (topic-based post linking)
+- [x] Blog discovery (from references)
+- [x] Trend detection (topic trending analysis)
 
 ### Phase 4 (Polish)
 - [ ] Semantic search
