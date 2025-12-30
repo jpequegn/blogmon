@@ -10,6 +10,7 @@ import (
 	"github.com/julienpequegnot/blogmon/internal/config"
 	"github.com/julienpequegnot/blogmon/internal/database"
 	"github.com/julienpequegnot/blogmon/internal/insight"
+	"github.com/julienpequegnot/blogmon/internal/link"
 	"github.com/julienpequegnot/blogmon/internal/post"
 	"github.com/julienpequegnot/blogmon/internal/reference"
 	"github.com/julienpequegnot/blogmon/internal/score"
@@ -99,6 +100,19 @@ func runShow(cmd *cobra.Command, args []string) error {
 				fmt.Printf("  → %s (%s)\n", ref.Title, ref.URL)
 			} else {
 				fmt.Printf("  → %s\n", ref.URL)
+			}
+		}
+	}
+
+	// Show related posts
+	linkRepo := link.NewRepository(db)
+	relatedIDs, _ := linkRepo.GetRelatedPosts(id, 5)
+	if len(relatedIDs) > 0 {
+		fmt.Printf("\n%s\n", labelStyle.Render("RELATED POSTS:"))
+		postRepo := post.NewRepository(db)
+		for _, relID := range relatedIDs {
+			if relPost, err := postRepo.Get(relID); err == nil {
+				fmt.Printf("  → [%d] %s\n", relPost.ID, relPost.Title)
 			}
 		}
 	}
