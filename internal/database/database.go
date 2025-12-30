@@ -13,7 +13,7 @@ type DB struct {
 }
 
 func New(path string) (*DB, error) {
-	conn, err := sql.Open("sqlite3", path+"?_foreign_keys=on")
+	conn, err := sql.Open("sqlite3", path+"?_foreign_keys=on&_fts5=true")
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
@@ -114,6 +114,26 @@ func (db *DB) initSchema() error {
 	CREATE INDEX IF NOT EXISTS idx_posts_source ON posts(source_id);
 	CREATE INDEX IF NOT EXISTS idx_posts_published ON posts(published_at);
 	CREATE INDEX IF NOT EXISTS idx_scores_final ON scores(final_score DESC);
+
+	CREATE VIRTUAL TABLE IF NOT EXISTS posts_fts USING fts5(
+		title,
+		content,
+		content='posts',
+		content_rowid='id'
+	);
+
+	CREATE TRIGGER IF NOT EXISTS posts_ai AFTER INSERT ON posts BEGIN
+		INSERT INTO posts_fts(rowid, title, content) VALUES (new.id, new.title, COALESCE(new.content_clean, new.content_raw, ''));
+	END;
+
+	CREATE TRIGGER IF NOT EXISTS posts_ad AFTER DELETE ON posts BEGIN
+		INSERT INTO posts_fts(posts_fts, rowid, title, content) VALUES('delete', old.id, old.title, COALESCE(old.content_clean, old.content_raw, ''));
+	END;
+
+	CREATE TRIGGER IF NOT EXISTS posts_au AFTER UPDATE ON posts BEGIN
+		INSERT INTO posts_fts(posts_fts, rowid, title, content) VALUES('delete', old.id, old.title, COALESCE(old.content_clean, old.content_raw, ''));
+		INSERT INTO posts_fts(rowid, title, content) VALUES (new.id, new.title, COALESCE(new.content_clean, new.content_raw, ''));
+	END;
 	`
 
 	_, err := db.conn.Exec(schema)

@@ -13,8 +13,10 @@ Or build from source:
 ```bash
 git clone https://github.com/julienpequegnot/blogmon
 cd blogmon
-go build -o blogmon .
+go build -tags sqlite_fts5 -o blogmon .
 ```
+
+Note: The `sqlite_fts5` build tag is required for full-text search support.
 
 ## Quick Start
 
