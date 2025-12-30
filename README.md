@@ -51,9 +51,12 @@ blogmon show 1
 | `blogmon link` | Build concept graph by linking related posts |
 | `blogmon discover` | Discover new blogs from references |
 | `blogmon trends` | Show trending topics |
-| `blogmon list` | List posts |
+| `blogmon list` | List posts (--sort: date/score/source) |
 | `blogmon show <id>` | Show post details |
 | `blogmon sources` | List monitored sources |
+| `blogmon search <query>` | Full-text search across posts |
+| `blogmon daemon` | Run in daemon mode for auto-fetching |
+| `blogmon reindex` | Rebuild full-text search index |
 
 ## Configuration
 
@@ -78,6 +81,9 @@ apis:
 fetch:
   concurrency: 5
   timeout_seconds: 30
+
+daemon:
+  interval_hours: 6
 ```
 
 ## Architecture
@@ -85,14 +91,16 @@ fetch:
 Pipeline architecture:
 
 ```
-fetch → extract → score → link → query
+fetch → extract → score → link → search
+         ↑                        ↓
+      daemon (scheduled)      query results
 ```
 
 - **fetch**: Download posts from RSS feeds
-- **extract**: Parse content, extract insights (Phase 2)
-- **score**: Calculate value scores (Phase 2)
-- **link**: Build concept graph (Phase 3)
-- **query**: Search and browse
+- **extract**: Parse content, extract insights using LLM
+- **score**: Calculate community/relevance/novelty scores
+- **link**: Build concept graph linking related posts
+- **search**: Full-text search with BM25 ranking
 
 ## Development Status
 
@@ -116,7 +124,9 @@ fetch → extract → score → link → query
 - [x] Blog discovery (from references)
 - [x] Trend detection (topic trending analysis)
 
-### Phase 4 (Polish)
-- [ ] Semantic search
-- [ ] Daemon mode
-- [ ] Full-text search
+### Phase 4 (Polish) - Complete
+- [x] Full-text search (SQLite FTS5 with BM25 ranking)
+- [x] Daemon mode (scheduled background processing)
+- [x] Search command with ranked results
+- [x] Reindex command for index maintenance
+- [x] Enhanced list command with sorting
