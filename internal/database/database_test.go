@@ -35,9 +35,11 @@ func TestInitSchema(t *testing.T) {
 	// Verify tables exist by querying them
 	tables := []string{"sources", "posts", "insights", "refs", "scores", "links", "interests"}
 	for _, table := range tables {
-		_, err := db.conn.Query("SELECT 1 FROM " + table + " LIMIT 1")
+		rows, err := db.conn.Query("SELECT 1 FROM " + table + " LIMIT 1")
 		if err != nil {
 			t.Errorf("table %s does not exist: %v", table, err)
+			continue
 		}
+		rows.Close()
 	}
 }
