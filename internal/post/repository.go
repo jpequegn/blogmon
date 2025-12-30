@@ -114,3 +114,38 @@ func (r *Repository) Get(id int64) (*Post, error) {
 	}
 	return &p, nil
 }
+
+func (r *Repository) GetUnextracted(limit int) ([]Post, error) {
+	rows, err := r.db.Query(`
+		SELECT p.id, p.source_id, s.name, p.url, p.title, p.author, p.published_at, p.fetched_at,
+		       p.content_raw, COALESCE(p.content_clean, '') as content_clean, COALESCE(p.word_count, 0)
+		FROM posts p
+		JOIN sources s ON p.source_id = s.id
+		WHERE p.content_clean IS NULL OR p.content_clean = ''
+		ORDER BY p.published_at DESC
+		LIMIT ?
+	`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []Post
+	for rows.Next() {
+		var p Post
+		if err := rows.Scan(&p.ID, &p.SourceID, &p.SourceName, &p.URL, &p.Title, &p.Author,
+			&p.PublishedAt, &p.FetchedAt, &p.ContentRaw, &p.ContentClean, &p.WordCount); err != nil {
+			return nil, err
+		}
+		posts = append(posts, p)
+	}
+	return posts, rows.Err()
+}
+
+func (r *Repository) UpdateContentClean(id int64, contentClean string, wordCount int) error {
+	_, err := r.db.Exec(
+		`UPDATE posts SET content_clean = ?, word_count = ? WHERE id = ?`,
+		contentClean, wordCount, id,
+	)
+	return err
+}
