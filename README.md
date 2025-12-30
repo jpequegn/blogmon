@@ -89,14 +89,14 @@ fetch → extract → score → link → query
 
 ## Development Status
 
-### Phase 1 (MVP) - In Progress
+### Phase 1 (MVP) - Complete
 - [x] Project setup
-- [ ] init command
-- [ ] add command
-- [ ] fetch command
-- [ ] list command
-- [ ] show command
-- [ ] sources command
+- [x] init command
+- [x] add command (with RSS feed auto-discovery)
+- [x] fetch command (with concurrent fetching)
+- [x] list command (with styled output)
+- [x] show command
+- [x] sources command
 
 ### Phase 2 (Intelligence)
 - [ ] LLM-powered insight extraction
