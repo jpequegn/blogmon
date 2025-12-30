@@ -9,7 +9,10 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/julienpequegnot/blogmon/internal/config"
 	"github.com/julienpequegnot/blogmon/internal/database"
+	"github.com/julienpequegnot/blogmon/internal/insight"
 	"github.com/julienpequegnot/blogmon/internal/post"
+	"github.com/julienpequegnot/blogmon/internal/reference"
+	"github.com/julienpequegnot/blogmon/internal/score"
 	"github.com/spf13/cobra"
 )
 
@@ -65,6 +68,40 @@ func runShow(cmd *cobra.Command, args []string) error {
 		fmt.Printf("%s %.0f\n", labelStyle.Render("Score:"), *p.FinalScore)
 	}
 	fmt.Printf("%s %s\n", labelStyle.Render("URL:"), urlStyle.Render(p.URL))
+
+	// Show score breakdown if available
+	scoreRepo := score.NewRepository(db)
+	if s, err := scoreRepo.Get(id); err == nil {
+		fmt.Printf("\n%s\n", labelStyle.Render("SCORES:"))
+		fmt.Printf("  Community: %.1f  Relevance: %.1f  Novelty: %.1f  → Final: %.1f\n",
+			s.CommunityScore, s.RelevanceScore, s.NoveltyScore, s.FinalScore)
+	}
+
+	// Show insights
+	insightRepo := insight.NewRepository(db)
+	insights, _ := insightRepo.ListForPost(id)
+	if len(insights) > 0 {
+		fmt.Printf("\n%s\n", labelStyle.Render("KEY TAKEAWAYS:"))
+		for _, ins := range insights {
+			if ins.Type == "takeaway" {
+				fmt.Printf("  • %s\n", ins.Content)
+			}
+		}
+	}
+
+	// Show references
+	refRepo := reference.NewRepository(db)
+	refs, _ := refRepo.ListForPost(id)
+	if len(refs) > 0 {
+		fmt.Printf("\n%s\n", labelStyle.Render("REFERENCES:"))
+		for _, ref := range refs {
+			if ref.Title != "" {
+				fmt.Printf("  → %s (%s)\n", ref.Title, ref.URL)
+			} else {
+				fmt.Printf("  → %s\n", ref.URL)
+			}
+		}
+	}
 
 	fmt.Println()
 
