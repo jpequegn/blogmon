@@ -117,9 +117,7 @@ func (db *DB) initSchema() error {
 
 	CREATE VIRTUAL TABLE IF NOT EXISTS posts_fts USING fts5(
 		title,
-		content,
-		content='posts',
-		content_rowid='id'
+		content
 	);
 
 	CREATE TRIGGER IF NOT EXISTS posts_ai AFTER INSERT ON posts BEGIN
